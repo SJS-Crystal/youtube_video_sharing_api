@@ -1,0 +1,52 @@
+inherit_from:
+  - .rubocop_disabled.yml
+
+# Add this to load Rails extension for rubocop
+require:
+  - rubocop-rails
+  - rubocop-performance
+  - rubocop-rspec
+
+# Add cops from additional gems
+inherit_gem:
+  standard: config/base.yml
+
+# enable rubocop-rails cops
+Rails:
+  Enabled: true
+
+# Common configuration.
+AllCops:
+  TargetRubyVersion: 3.1
+  SuggestExtensions: false
+  NewCops: disable
+  Exclude:
+    - 'public/**/*'
+    - 'vendor/**/*'
+    - 'bin/*'
+    - 'db/**/*'
+    - 'config/**/*'
+    - 'app/views/**/*'
+    - 'app/assets/**/*'
+    - 'app/javascript/**/*'
+    - 'app/javascript/**/*'
+    - 'spec/**/*'
+    - 'config.ru'
+    - 'Rakefile'
+
+# Built-in global variables are allowed by default.
+Style/GlobalVars:
+  AllowedVariables:
+  - $user_desc
+
+Style/StringLiterals:
+  EnforcedStyle: single_quotes
+  SupportedStyles:
+    - single_quotes
+    - double_quotes
+  Exclude:
+    - 'Gemfile'
+
+Style/AndOr:
+  Description: "Use &&/|| instead of and/or."
+  Enabled: true
