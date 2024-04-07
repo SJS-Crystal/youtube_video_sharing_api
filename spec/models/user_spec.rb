@@ -11,6 +11,10 @@ RSpec.describe User, type: :model do
     it { should_not allow_value("123123ffdsf").for(:email) }
   end
 
+  describe "associations" do
+    it { should have_many(:videos) }
+  end
+
   describe "password_validation_required" do
     it "returns true if it's a new record and password is not present" do
       user = User.new

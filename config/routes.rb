@@ -9,6 +9,8 @@ Rails.application.routes.draw do
             delete :logout
           end
         end
+
+        resources :videos, only: [:index, :create]
       end
     end
   end

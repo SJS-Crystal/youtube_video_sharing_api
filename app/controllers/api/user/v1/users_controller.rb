@@ -16,7 +16,7 @@ class Api::User::V1::UsersController < Api::User::V1::BaseController
       user.update!(public_key: public_key)
       render json: {data: {id: user.id, email: user.email, token: token}}
     else
-      render json: {error: 'Invalid email or password'}, status: :unauthorized
+      render json: {message: 'Invalid email or password'}, status: :unauthorized
     end
   end
 

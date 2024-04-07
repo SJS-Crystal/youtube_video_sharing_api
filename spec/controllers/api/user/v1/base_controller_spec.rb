@@ -73,7 +73,7 @@ RSpec.describe Api::User::V1::BaseController, type: :controller do
     it 'handles ActiveRecord::RecordInvalid' do
       get :index_record_invalid
       expect(response).to have_http_status(:unprocessable_entity)
-      expect(JSON.parse(response.body)['message']).to eq("Password can't be blank. Email can't be blank. Email is invalid. Password can't be blank. Password is too short (minimum is 6 characters)")
+      expect(JSON.parse(response.body)['message']).to eq("Password can't be blank. Email can't be blank. Email is invalid. Password is too short (minimum is 6 characters)")
     end
 
     it 'handles ActiveRecord::RecordNotFound' do

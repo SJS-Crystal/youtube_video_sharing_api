@@ -35,7 +35,7 @@ RSpec.describe Api::User::V1::UsersController, type: :controller do
       it 'returns unauthorized' do
         post :login, params: params
         expect(response).to have_http_status(:unauthorized)
-        expect(JSON.parse(response.body)['error']).to eq('Invalid email or password')
+        expect(JSON.parse(response.body)['message']).to eq('Invalid email or password')
       end
     end
 
@@ -45,7 +45,7 @@ RSpec.describe Api::User::V1::UsersController, type: :controller do
       it 'returns unauthorized' do
         post :login, params: params
         expect(response).to have_http_status(:unauthorized)
-        expect(JSON.parse(response.body)['error']).to eq('Invalid email or password')
+        expect(JSON.parse(response.body)['message']).to eq('Invalid email or password')
       end
     end
 
@@ -55,7 +55,7 @@ RSpec.describe Api::User::V1::UsersController, type: :controller do
       it 'returns unauthorized' do
         post :login, params: params
         expect(response).to have_http_status(:unauthorized)
-        expect(JSON.parse(response.body)['error']).to eq('Invalid email or password')
+        expect(JSON.parse(response.body)['message']).to eq('Invalid email or password')
       end
     end
   end

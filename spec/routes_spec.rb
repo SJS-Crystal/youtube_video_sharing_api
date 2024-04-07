@@ -16,4 +16,12 @@ RSpec.describe "API User V1 Users Routing", type: :routing do
   it "routes DELETE /api/user/v1/users/logout to users#logout" do
     expect(delete: "/api/user/v1/users/logout").to route_to("api/user/v1/users#logout")
   end
+
+  it "routes POST /api/user/v1/videos to videos#login" do
+    expect(post: "/api/user/v1/videos").to route_to("api/user/v1/videos#create")
+  end
+
+  it "routes GET /api/user/v1/videos to videos#index" do
+    expect(get: "/api/user/v1/videos").to route_to("api/user/v1/videos#index")
+  end
 end

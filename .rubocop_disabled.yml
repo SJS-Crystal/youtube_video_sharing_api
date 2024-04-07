@@ -5,6 +5,3 @@ Rails/HasManyOrHasOneDependent:
 
 Rails/ApplicationController:
   Enabled: false
-
-Rails/UniqueValidationWithoutIndex:
-  Enabled: false
