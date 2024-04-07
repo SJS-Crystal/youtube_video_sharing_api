@@ -24,6 +24,8 @@ class Api::User::V1::UsersController < Api::User::V1::BaseController
   def create
     user = User.new(email: params[:email], password: params[:password])
     user.save!
-    render json: {data: user}, status: :created
+    token, public_key = Authentication.generate_token(user)
+    user.update!(public_key: public_key)
+    render json: {data: {id: user.id, email: user.email, token: token}}, status: :created
   end
 end

@@ -40,4 +40,28 @@ RSpec.describe Api::User::V1::VideosController, type: :controller do
       end
     end
   end
+
+  describe '#index' do
+    it 'returns list videos' do
+      videos = create_list(:video, 9, user: user)
+
+      get :index, params: { page: 1, items: 5 }
+
+      expect(response.status).to eq 200
+      parsed_response = JSON.parse(response.body)
+
+      expect(parsed_response['data'].size).to eq 5
+
+      returned_ids = parsed_response['data'].map { |video| video['id'] }
+      expect(returned_ids).to match_array(videos.map(&:id).last(5))
+
+      parsed_response['data'].each do |video|
+        expect(video['id']).to be_present
+        expect(video['shared_by']).to be_present
+        expect(video['title']).to be_present
+        expect(video['description']).to be_present
+        expect(video['youtube_id']).to be_present
+      end
+    end
+  end
 end

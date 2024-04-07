@@ -16,7 +16,6 @@ class Youtube
       else
         title = json['items'][0]['snippet']['title']
         description = json['items'][0]['snippet']['description']
-
         {youtube_id: youtube_id.to_s, title: title, description: description}
       end
     end

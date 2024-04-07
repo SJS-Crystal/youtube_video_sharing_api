@@ -1,4 +1,6 @@
 class User < ApplicationRecord
+  before_save :set_default_name
+
   has_secure_password
   has_many :videos
 
@@ -9,5 +11,9 @@ class User < ApplicationRecord
 
   def password_validation_required?
     new_record? || password.present?
+  end
+
+  def set_default_name
+    self.name ||= email.split('@').first
   end
 end
