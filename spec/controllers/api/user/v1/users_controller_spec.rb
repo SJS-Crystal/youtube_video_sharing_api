@@ -2,13 +2,16 @@ require 'rails_helper'
 
 RSpec.describe Api::User::V1::UsersController, type: :controller do
   let(:user) { create(:user) }
-  let(:token_and_public_key) { Authentication.generate_token(user) }
+  let(:token_and_public_key) {
+    res = Authentication.generate_token(user)
+    user.update!(public_key: res[1])
+    res
+  }
   let(:token) { token_and_public_key[0] }
   let(:public_key) { token_and_public_key[1] }
 
   describe '#logout' do
     before do
-      user.update!(public_key: public_key)
       request.headers['Authorization'] = token
     end
 

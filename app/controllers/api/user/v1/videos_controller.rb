@@ -6,7 +6,8 @@ class Api::User::V1::VideosController < Api::User::V1::BaseController
     video_info = Youtube.get_video_info(params[:url])
     return render json: {message: 'Invalid youtube url'}, status: :bad_request unless video_info
 
-    @current_user.videos.create!(video_info)
+    video = @current_user.videos.create!(video_info)
+    PushNoticeJob.perform_async(@current_user.id, @current_user.name, video.youtube_id, video.title)
     render json: {}, status: :created
   end
 

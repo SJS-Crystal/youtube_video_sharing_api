@@ -17,7 +17,7 @@ services:
     # ports:
     #   - '6379:6379'
     volumes:
-      - redis_data:/data
+      - redis_data:/var/lib/redis/data
 
   api:
     build:
@@ -32,6 +32,17 @@ services:
       - redis
     # environment:
       # DB_HOST: db
+    env_file:
+      - ./.env
+
+  sidekiq:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: bundle exec sidekiq -C config/sidekiq.yml
+    depends_on:
+      - db
+      - redis
     env_file:
       - ./.env
 
