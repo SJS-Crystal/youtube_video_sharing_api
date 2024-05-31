@@ -16,13 +16,14 @@ This is application for sharing youtube video
 
 # How to run the test suite
 - Rspec:
-```sh
-docker-compose run api bundle exec rspec
-```
+  ```sh
+  docker-compose run api bundle exec rspec
+  ```
+
 - Rubocop:
-```sh
-docker-compose run api bundle exec rubocop
-```
+  ```sh
+  docker-compose run api bundle exec rubocop
+  ```
 
 * Services (job queues, cache servers, search engines, etc.)
 
