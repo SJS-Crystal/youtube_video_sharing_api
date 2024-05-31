@@ -2,16 +2,14 @@
 This is application for sharing youtube video
 
 # System Application Overview
-* Application base on
-- Ruby 3.1.2
-- Rails 7.0.8
-
-* DB
-- Postgresql 16
-- Redis
+ Application base on
+  - Ruby 3.1.2
+  - Rails 7.0.8
+  - Postgresql 16
+  - Redis
 
 # How to get the application up and run
-* Configuration
+- Clone repo git clone https://github.com/SJS-Crystal/youtube_video_sharing_api.git
 - Create .env file in root directory from .env.sample
 - `docker-compose run api rails db:create`
 - `docker-compose up`
