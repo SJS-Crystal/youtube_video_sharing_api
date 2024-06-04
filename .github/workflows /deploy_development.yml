@@ -1,0 +1,103 @@
+name: Deploy Development
+
+on:
+  issue_comment:
+    types: 
+      - created
+
+jobs:
+  Check_PR_status:
+    if: github.event.issue.pull_request && startsWith(github.event.comment.body, '/build_and_deploy_s')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR status
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            const pr = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number
+            });
+
+            if (pr.data.base.ref !== 'develop') {
+              const message = `=====> This workflow only runs for PRs based on the 'develop' branch. Current base branch: ${pr.data.base.ref}`;
+              core.setFailed(message);
+            }
+
+            if (pr.data.state !== 'open') {
+              const message = `=====> PR is not open. Current PR state: ${pr.data.state}`;
+              core.setFailed(message);
+            }
+
+            if (pr.data.mergeable_state == 'dirty') {
+              const message = `=====> PR cannot be merged. Please resolve conflicts`;
+              core.setFailed(message);
+            }
+
+  Docker_build_Development:
+    needs: Check_PR_status
+    if: >
+      github.event.issue.pull_request &&
+      startsWith(github.event.comment.body, '/build_and_deploy_s')
+    runs-on: ubuntu-latest
+    environment:
+      name: development
+    outputs:
+      IMAGE_TAG: ${{ steps.build_image.outputs.IMAGE_TAG }}
+      SERVER_NUMBER: ${{ steps.target_server.outputs.SERVER_NUMBER }}
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        ref: refs/pull/${{ github.event.issue.number }}/merge
+
+    - name: Extract server number
+      id: target_server
+      run: |
+        SERVER_NUMBER=$(echo ${{ github.event.comment.body }} | grep -o -E 's[0-9]+' | cut -c2-)
+
+        if [ -z "$SERVER_NUMBER" ]; then
+            echo "ERROR:: Command is incorrect!"
+            exit 1
+        fi
+
+        echo "SERVER_NUMBER=$SERVER_NUMBER" >> $GITHUB_ENV
+        echo "SERVER_NUMBER=$SERVER_NUMBER" >> $GITHUB_OUTPUT
+
+
+    - name: Create env file
+      run: echo "${{ secrets.ENV_FILE }}" > .env
+
+    - name: Log in to Docker Hub
+      run: echo "${{ secrets.DOCKER_TOKEN }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+    - name: Build and push Docker image
+      id: build_image
+      env:
+        DOMAIN_KEY_NAME: ${{ format('DOMAIN_NAME_{0}', env.SERVER_NUMBER) }}
+
+      run: |
+        export DOMAIN_NAME=${{ vars[env.DOMAIN_KEY_NAME] }}
+        if [ -z "$DOMAIN_NAME" ]; then
+            echo "::ERROR: '${{ env.DOMAIN_KEY_NAME }}' ENV VARIABLE IS EMPTY! PLEASE SET THIS VARIABLE"
+            exit 1
+        fi
+        envsubst '$DOMAIN_NAME' < domain.template.conf > default.conf
+        envsubst '$DOMAIN_NAME' < docker-compose.template.yml > docker-compose.server.yml
+        IMAGE_TAG=$(openssl rand -hex 4)
+        echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_OUTPUT
+        echo "Building image with tag ${IMAGE_TAG}"
+        docker build . -f Dockerfile.server -t ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:${IMAGE_TAG}
+        echo "Pushing image ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:${IMAGE_TAG}"
+        docker push ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:${IMAGE_TAG}
+
+  Deployment:
+    needs: Docker_build_Development
+    uses: ./.github/workflows/_deploy-template.yml
+    secrets: inherit
+    with:
+      DOCKER_IMAGE_TAG: ${{ needs.Docker_build_Development.outputs.IMAGE_TAG }}
+      serverSelection: ${{ needs.Docker_build_Development.outputs.SERVER_NUMBER }}
+      environmentName: development
+      approvalEnvironmentName: approval_development_deloyment
