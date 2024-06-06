@@ -95,9 +95,9 @@ jobs:
             cd /home/project/
             docker pull $DOCKER_USERNAME/$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG
             docker compose -f docker-compose.server.yml run api rails db:migrate
-#       if event == work_dispatch     docker compose -f docker-compose.server.yml run api bash /app/prepate_data.sh
-# khi tạo PR sẽ tự deploy, cần setup script trong env trước khi tạo PR sao???? Dev k có quyền vào env thì sao?
-# => k dùng env => để script migrate data trong code luôn
-            docker compose -f docker-compose.server.yml down
-            docker compose -f docker-compose.server.yml up -d
+#            docker compose -f docker-compose.server.yml down
+#            docker compose -f docker-compose.server.yml up -d --no-deps api sidekiq
+# lần đầu thì start lên hết service
+# lần sau thì chỉ cần restart các serive có thay đổi, k dùng 'down'
+            docker image prune -f
           EOF

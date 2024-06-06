@@ -8,6 +8,8 @@ RUN bundle lock --add-platform arm64-darwin-22
 RUN bundle lock --add-platform aarch64-linux
 RUN bundle lock --add-platform x86_64-linux
 COPY . .
-RUN chmod +x ./entrypoint.sh
-ENTRYPOINT ["./entrypoint.sh"]
+# RUN chmod +x ./entrypoint.sh
+# ENTRYPOINT ["./entrypoint.sh"]
+# RUN rails db:migrate
+RUN rails assets:precompile
 CMD ["rails", "s", "-p", "3000", "-b", "0.0.0.0"]
