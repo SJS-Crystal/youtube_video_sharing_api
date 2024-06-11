@@ -27,6 +27,7 @@ env:
   HOST_SECRET_NAME: ${{ format('SERVER_HOST_{0}', inputs.serverSelection) }}
   USER_SECRET_NAME: ${{ format('SERVER_USER_{0}', inputs.serverSelection) }}
   SSH_KEY_SECRET_NAME: ${{ format('SERVER_SSH_KEY_{0}', inputs.serverSelection) }}
+  DOMAIN_KEY_NAME: ${{ format('DOMAIN_NAME_{0}', inputs.serverSelection) }}
 
 jobs:
   Approval:
@@ -61,14 +62,13 @@ jobs:
         if: steps.setup-check.outcome == 'success'
         shell: bash
         env:
-          DOMAIN_ENV_NAME: ${{ format('DOMAIN_NAME_{0}', inputs.serverSelection) }}
           EMAIL: ${{ vars.SIGN_SSL_EMAIL || 'default@gmail.com' }}
         run: |
           ssh -i server_ssh_file -o StrictHostKeyChecking=no ${{ secrets[env.USER_SECRET_NAME] }}@${{ secrets[env.HOST_SECRET_NAME] }} << 'EOF'
             sudo apt update
             sudo apt install -y docker-compose-v2
             sudo apt install -y certbot
-            sudo certbot certonly --standalone --agree-tos --email ${{env.EMAIL}} -d ${{ vars[env.DOMAIN_ENV_NAME] }} --no-eff-email -n
+            sudo certbot certonly --standalone --agree-tos --email ${{env.EMAIL}} -d ${{ vars[env.DOMAIN_KEY_NAME] }} --no-eff-email -n
             (crontab -l 2>/dev/null; echo "0 2 * * 1 /usr/bin/certbot renew --quiet") | crontab -
             touch /etc/setup_done
           EOF
@@ -86,18 +86,22 @@ jobs:
           echo "${{ secrets[env.SSH_KEY_SECRET_NAME] }}" > server_ssh_file
           chmod 400 server_ssh_file
           ssh -i server_ssh_file -o StrictHostKeyChecking=no ${{ secrets[env.USER_SECRET_NAME] }}@${{ secrets[env.HOST_SECRET_NAME] }} 'mkdir -p /home/project/'
-          scp -i server_ssh_file -o StrictHostKeyChecking=no docker-compose.server.yml ${{ secrets[env.USER_SECRET_NAME] }}@${{ secrets[env.HOST_SECRET_NAME] }}:/home/project/
+          scp -i server_ssh_file -o StrictHostKeyChecking=no docker-compose.server.yml domain.template.conf ${{ secrets[env.USER_SECRET_NAME] }}@${{ secrets[env.HOST_SECRET_NAME] }}:/home/project/
           ssh -i server_ssh_file -o StrictHostKeyChecking=no ${{ secrets[env.USER_SECRET_NAME] }}@${{ secrets[env.HOST_SECRET_NAME] }} << 'EOF'
+            FILE="$DOCKER_IMAGE_TAG.env"
+            [ -f "$FILE" ] || echo "${{ secrets.ENV_FILE }}" > "$FILE"
+
+            export ENV_FILE="$FILE"
+            export DOMAIN_NAME=${{ vars[env.DOMAIN_KEY_NAME] }}
             export DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
             export DOCKER_IMAGE_TAG=${{ inputs.DOCKER_IMAGE_TAG }}
             export DOCKER_IMAGE_NAME=${{ secrets.DOCKER_IMAGE_NAME }}
+            envsubst '$DOMAIN_NAME' < domain.template.conf > "${DOMAIN_NAME}.conf"
             echo "${{ secrets.DOCKER_TOKEN }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
             cd /home/project/
             docker pull $DOCKER_USERNAME/$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG
-            docker compose -f docker-compose.server.yml run api rails db:migrate
-#            docker compose -f docker-compose.server.yml down
-#            docker compose -f docker-compose.server.yml up -d --no-deps api sidekiq
-# lần đầu thì start lên hết service
-# lần sau thì chỉ cần restart các serive có thay đổi, k dùng 'down'
+            docker compose -f docker-compose.server.yml --env-file $FILE run api rails db:migrate
+            docker compose -f docker-compose.server.yml --env-file $FILE up -d
+            docker compose -f docker-compose.server.yml --env-file $FILE up -d --force-recreate api sidekiq
             docker image prune -f
           EOF

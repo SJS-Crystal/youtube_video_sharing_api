@@ -74,17 +74,8 @@ jobs:
 
     - name: Build and push Docker image
       id: build_image
-      env:
-        DOMAIN_KEY_NAME: ${{ format('DOMAIN_NAME_{0}', env.SERVER_NUMBER) }}
 
       run: |
-        export DOMAIN_NAME=${{ vars[env.DOMAIN_KEY_NAME] }}
-        if [ -z "$DOMAIN_NAME" ]; then
-            echo "::ERROR: '${{ env.DOMAIN_KEY_NAME }}' ENV VARIABLE IS EMPTY! PLEASE SET THIS VARIABLE"
-            exit 1
-        fi
-        envsubst '$DOMAIN_NAME' < domain.template.conf > default.conf
-        envsubst '$DOMAIN_NAME' < docker-compose.template.yml > docker-compose.server.yml
         IMAGE_TAG=$(openssl rand -hex 4)
         echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_OUTPUT
         echo "Building image with tag ${IMAGE_TAG}"
