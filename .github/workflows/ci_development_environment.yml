@@ -11,7 +11,9 @@ on:
 jobs:
   run_test_Development:
     if: (github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'develop')
-    uses: ./.github/workflows/_test-template.yml
+    runs-on: ubuntu-latest
+    steps:
+      - uses: ./.github/workflows/_test-template.yml
 
   need_merge_develop_approval:
     runs-on: ubuntu-latest
