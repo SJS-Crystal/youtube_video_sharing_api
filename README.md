@@ -3,7 +3,7 @@ This is application for sharing youtube video
 
 # System Application Overview
  Application base on
-  - Ruby 3.2.7
+  - Ruby 3.3.3
   - Rails 7.0.8
   - Postgresql 16
   - Redis
