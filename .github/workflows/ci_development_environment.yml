@@ -29,7 +29,14 @@ jobs:
 
     env:
       RAILS_ENV: test
-      DATABASE_URL: postgresql://usertest:password123123@localhost:5432/test_database
+      DATABASE_URL: 'postgresql://usertest:password123123@localhost:5432/test_database'
+      RAILS_MASTER_KEY: 'd4f6d3124335ac721f50c10b93ec2cb0'
+      POSTGRES_HOST: db
+      POSTGRES_USER: usertest
+      POSTGRES_PASSWORD: password123123
+      POSTGRES_DB: test_database
+      REDIS_URL: redis://redis:6379/0
+      YOUTUBE_API_KEY: ''
 
     steps:
       - uses: actions/checkout@v4
