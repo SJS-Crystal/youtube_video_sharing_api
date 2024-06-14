@@ -1,0 +1,65 @@
+name: _ Test Template
+
+on:
+  workflow_call:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        ports:
+          - "5432:5432"
+        env:
+          POSTGRES_DB: test_database
+          POSTGRES_USER: usertest
+          POSTGRES_PASSWORD: password123123
+        options: >-
+          --health-cmd "pg_isready -U usertest -d test_database -h localhost"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      RAILS_ENV: test
+      DATABASE_URL: 'postgresql://usertest:password123123@localhost:5432/test_database'
+      RAILS_MASTER_KEY: 'd4f6d3124335ac721f50110b93ec2cb1'
+      POSTGRES_HOST: db
+      POSTGRES_USER: usertest
+      POSTGRES_PASSWORD: password123123
+      POSTGRES_DB: test_database
+      REDIS_URL: redis://redis:6379/0
+      YOUTUBE_API_KEY: ''
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.3.3
+      - name: Cache Gems
+        uses: actions/cache@v2
+        with:
+          path: vendor/bundle
+          key: ${{ runner.os }}-bundle-${{ hashFiles('**/Gemfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bundle-
+
+      - name: Install dependencies
+        run: |
+          bundle config set --local path 'vendor/bundle'
+          bundle install -j $(nproc) --retry 3
+
+      # - run:  bin/rails db:schema:load
+
+      - name: Lint Ruby files
+        run: bundle exec rubocop --parallel
+
+      - name: Check security vulnerabilities(brakeman)
+        run: bundle exec brakeman
+
+      - name: Check security vulnerabilities(bundle-audit)
+        run: bundle exec bundle-audit check --update
+
+      - name: Run tests
+        run: bundle exec rspec

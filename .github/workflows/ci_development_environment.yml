@@ -11,58 +11,7 @@ on:
 jobs:
   run_test_Development:
     if: (github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'develop')
-    runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:16
-        ports:
-          - "5432:5432"
-        env:
-          POSTGRES_DB: test_database
-          POSTGRES_USER: usertest
-          POSTGRES_PASSWORD: password123123
-        options: >-
-          --health-cmd "pg_isready -U usertest -d test_database -h localhost"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    env:
-      RAILS_ENV: test
-      DATABASE_URL: postgresql://usertest:password123123@localhost:5432/test_database
-
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: 3.3.3
-      - name: Cache Gems
-        uses: actions/cache@v2
-        with:
-          path: vendor/bundle
-          key: ${{ runner.os }}-bundle-${{ hashFiles('**/Gemfile.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-bundle-
-
-      - name: Install dependencies
-        run: |
-          bundle config set --local path 'vendor/bundle'
-          bundle install -j $(nproc)
-
-      # - run:  bin/rails db:schema:load
-
-      - name: Lint Ruby files
-        run: bundle exec rubocop --parallel
-
-      - name: Check security vulnerabilities(brakeman)
-        run: bundle exec brakeman
-
-      - name: Check security vulnerabilities(bundle-audit)
-        run: bundle-audit check --update
-
-      - name: Run tests
-        run: bundle exec rspec
-
+    uses: ./.github/workflows/_test-template.yml
 
   need_merge_develop_approval:
     runs-on: ubuntu-latest
