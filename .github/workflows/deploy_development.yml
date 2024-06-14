@@ -79,7 +79,7 @@ jobs:
         IMAGE_TAG=$(openssl rand -hex 4)
         echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_OUTPUT
         echo "Building image with tag ${IMAGE_TAG}"
-        set -o allexport; source /.env; set +o allexport
+        set -o allexport; source .env; set +o allexport
         docker build . -f Dockerfile.server --build-arg RAILS_ENV=$RAILS_ENV -t ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:${IMAGE_TAG}
         echo "Pushing image ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:${IMAGE_TAG}"
         docker push ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:${IMAGE_TAG}
