@@ -86,20 +86,17 @@ jobs:
           echo "${{ secrets[env.SSH_KEY_SECRET_NAME] }}" > server_ssh_file
           chmod 400 server_ssh_file
           ssh -i server_ssh_file -o StrictHostKeyChecking=no ${{ secrets[env.USER_SECRET_NAME] }}@${{ secrets[env.HOST_SECRET_NAME] }} 'mkdir -p /home/project/'
-          scp -i server_ssh_file -o StrictHostKeyChecking=no domain.template.conf ${{ secrets[env.USER_SECRET_NAME] }}@${{ secrets[env.HOST_SECRET_NAME] }}:/home/project/
-          scp -i server_ssh_file -o StrictHostKeyChecking=no docker-compose.server.yml ${{ secrets[env.USER_SECRET_NAME] }}@${{ secrets[env.HOST_SECRET_NAME] }}:/home/project/
+          scp -i server_ssh_file -o StrictHostKeyChecking=no docker-compose.server.yml domain.template.conf ${{ secrets[env.USER_SECRET_NAME] }}@${{ secrets[env.HOST_SECRET_NAME] }}:/home/project/
           ssh -i server_ssh_file -o StrictHostKeyChecking=no ${{ secrets[env.USER_SECRET_NAME] }}@${{ secrets[env.HOST_SECRET_NAME] }} << 'EOF'
+            cd /home/project/
             FILE="${{ inputs.DOCKER_IMAGE_TAG }}.env"
             [ -f "$FILE" ] || echo "${{ secrets.ENV_FILE }}" > "$FILE"
-
-            export ENV_FILE="$FILE"
             export DOMAIN_NAME=${{ vars[env.DOMAIN_KEY_NAME] }}
             export DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
             export DOCKER_IMAGE_TAG=${{ inputs.DOCKER_IMAGE_TAG }}
             export DOCKER_IMAGE_NAME=${{ secrets.DOCKER_IMAGE_NAME }}
             envsubst '$DOMAIN_NAME' < domain.template.conf > "${DOMAIN_NAME}.conf"
             echo "${{ secrets.DOCKER_TOKEN }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-            cd /home/project/
             docker pull $DOCKER_USERNAME/$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG
             docker compose -f docker-compose.server.yml --env-file $FILE run api rails db:migrate
             docker compose -f docker-compose.server.yml --env-file $FILE up -d
