@@ -86,7 +86,8 @@ jobs:
           echo "${{ secrets[env.SSH_KEY_SECRET_NAME] }}" > server_ssh_file
           chmod 400 server_ssh_file
           ssh -i server_ssh_file -o StrictHostKeyChecking=no ${{ secrets[env.USER_SECRET_NAME] }}@${{ secrets[env.HOST_SECRET_NAME] }} 'mkdir -p /home/project/'
-          scp -i server_ssh_file -o StrictHostKeyChecking=no docker-compose.server.yml domain.template.conf ${{ secrets[env.USER_SECRET_NAME] }}@${{ secrets[env.HOST_SECRET_NAME] }}:/home/project/
+          scp -i server_ssh_file -o StrictHostKeyChecking=no domain.template.conf ${{ secrets[env.USER_SECRET_NAME] }}@${{ secrets[env.HOST_SECRET_NAME] }}:/home/project/
+          scp -i server_ssh_file -o StrictHostKeyChecking=no docker-compose.server.yml ${{ secrets[env.USER_SECRET_NAME] }}@${{ secrets[env.HOST_SECRET_NAME] }}:/home/project/
           ssh -i server_ssh_file -o StrictHostKeyChecking=no ${{ secrets[env.USER_SECRET_NAME] }}@${{ secrets[env.HOST_SECRET_NAME] }} << 'EOF'
             FILE="$DOCKER_IMAGE_TAG.env"
             [ -f "$FILE" ] || echo "${{ secrets.ENV_FILE }}" > "$FILE"
