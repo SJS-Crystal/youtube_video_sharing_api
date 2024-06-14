@@ -3,9 +3,10 @@ FROM ruby:3.3.3
 WORKDIR /app
 COPY Gemfile ./
 COPY Gemfile.lock ./
-RUN bundle config set --local deployment true
-RUN if [ "$RAILS_ENV" = "development" ]; then bundle install -j $(nproc) --retry 3; fi
+RUN 
+RUN if [ "$RAILS_ENV" != "development" ]; then bundle config set without 'development test deployment'; fi
 RUN if [ "$RAILS_ENV" != "development" ]; then bundle install --without development test deployment -j $(nproc) --retry 3; fi
+RUN if [ "$RAILS_ENV" = "development" ]; then bundle install -j $(nproc) --retry 3; fi
 RUN bundle lock --add-platform arm64-darwin-22
 RUN bundle lock --add-platform aarch64-linux
 RUN bundle lock --add-platform x86_64-linux
