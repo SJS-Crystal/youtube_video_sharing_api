@@ -5,7 +5,7 @@ COPY Gemfile ./
 COPY Gemfile.lock ./
 
 COPY .env /.env
-RUN RUN set -o allexport; source /.env; set +o allexport
+RUN set -o allexport; source /.env; set +o allexport
 
 RUN echo "$RAILS_ENV"
 RUN echo "====================="
