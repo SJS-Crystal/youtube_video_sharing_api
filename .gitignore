@@ -19,5 +19,3 @@
 /config/credentials.yml.enc
 
 *.env
-
-Gemfile.lock
