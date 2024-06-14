@@ -28,9 +28,3 @@ This is application for sharing youtube video
 * Services (job queues, cache servers, search engines, etc.)
 
 * Deployment instructions
-
-
-
-
-
-
