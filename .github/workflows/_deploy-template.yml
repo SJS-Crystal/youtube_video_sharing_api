@@ -91,6 +91,10 @@ jobs:
             cd /home/project/
             FILE="${{ inputs.DOCKER_IMAGE_TAG }}.env"
             [ -f "$FILE" ] || echo "${{ secrets.ENV_FILE }}" > "$FILE"
+            echo $FILE
+            echo "================="
+            ls $FILE
+            echo "================="
             export DOMAIN_NAME=${{ vars[env.DOMAIN_KEY_NAME] }}
             export DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
             export DOCKER_IMAGE_TAG=${{ inputs.DOCKER_IMAGE_TAG }}
