@@ -1,11 +1,10 @@
 FROM ruby:3.3.3
 
+ARG RAILS_ENV
+
 WORKDIR /app
 COPY Gemfile ./
 COPY Gemfile.lock ./
-
-COPY .env .env
-RUN export $(grep -v '^#' .env | xargs)
 
 RUN echo "$RAILS_ENV"
 RUN echo "====================="
