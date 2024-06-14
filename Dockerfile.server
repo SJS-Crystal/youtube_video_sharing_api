@@ -14,5 +14,5 @@ COPY . .
 # RUN chmod +x ./entrypoint.sh
 # ENTRYPOINT ["./entrypoint.sh"]
 # RUN rails db:migrate
-RUN bundle exec rails assets:precompile
+RUN if [ "$RAILS_ENV" != "development" ]; then rake assets:precompile RAILS_ENV="$RAILS_ENV"; fi
 CMD ["rails", "s", "-p", "3000", "-b", "0.0.0.0"]
