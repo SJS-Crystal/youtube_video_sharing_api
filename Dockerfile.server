@@ -4,8 +4,8 @@ WORKDIR /app
 COPY Gemfile ./
 COPY Gemfile.lock ./
 
-COPY .env /.env
-RUN export $(cat /app/.env | xargs)
+COPY .env .env
+RUN export $(cat .env | xargs)
 
 RUN echo "$RAILS_ENV"
 RUN echo "====================="
