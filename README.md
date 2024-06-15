@@ -28,3 +28,5 @@ This is application for sharing youtube video
 * Services (job queues, cache servers, search engines, etc.)
 
 * Deployment instructions
+
+![alt text](doc_images/image.png)
