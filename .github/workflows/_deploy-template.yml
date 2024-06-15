@@ -89,7 +89,7 @@ jobs:
           ssh -i server_ssh_file -o StrictHostKeyChecking=no ${{ secrets[env.USER_SECRET_NAME] }}@${{ vars[env.DOMAIN_KEY_NAME] }} << 'EOF'
             cd /home/project/
             FILE="${{ inputs.DOCKER_IMAGE_TAG }}.env"
-            [ -f "$FILE" ] || echo "${{ vars.ENV_FILE }}" > "$FILE"
+            [ -f "$FILE" ] || echo "${{ secrets.ENV_FILE }}" > "$FILE"
             export ENV_FILE=$FILE
             export DOMAIN_NAME=${{ vars[env.DOMAIN_KEY_NAME] }}
             echo "ALLOWED_HOST=$DOMAIN_NAME" >> "$FILE"
