@@ -24,7 +24,6 @@ on:
         type: string
 
 env:
-  HOST_SECRET_NAME: ${{ format('SERVER_HOST_{0}', inputs.serverSelection) }}
   USER_SECRET_NAME: ${{ format('SERVER_USER_{0}', inputs.serverSelection) }}
   SSH_KEY_SECRET_NAME: ${{ format('SERVER_SSH_KEY_{0}', inputs.serverSelection) }}
   DOMAIN_KEY_NAME: ${{ format('DOMAIN_NAME_{0}', inputs.serverSelection) }}
@@ -55,7 +54,7 @@ jobs:
           fi
           echo "${{ secrets[env.SSH_KEY_SECRET_NAME] }}" > server_ssh_file
           chmod 400 server_ssh_file
-          ssh -i server_ssh_file -o StrictHostKeyChecking=no ${{ secrets[env.USER_SECRET_NAME] }}@${{ secrets[env.HOST_SECRET_NAME] }} '[ -f /etc/setup_done ] && exit 99 || exit 0'
+          ssh -i server_ssh_file -o StrictHostKeyChecking=no ${{ secrets[env.USER_SECRET_NAME] }}@${{ vars[env.DOMAIN_KEY_NAME] }} '[ -f /etc/setup_done ] && exit 99 || exit 0'
         continue-on-error: true
 
       - name: Install dependencies
@@ -64,7 +63,7 @@ jobs:
         env:
           EMAIL: ${{ vars.SIGN_SSL_EMAIL || 'default@gmail.com' }}
         run: |
-          ssh -i server_ssh_file -o StrictHostKeyChecking=no ${{ secrets[env.USER_SECRET_NAME] }}@${{ secrets[env.HOST_SECRET_NAME] }} << 'EOF'
+          ssh -i server_ssh_file -o StrictHostKeyChecking=no ${{ secrets[env.USER_SECRET_NAME] }}@${{ vars[env.DOMAIN_KEY_NAME] }} << 'EOF'
             sudo apt update
             sudo apt install -y docker-compose-v2
             sudo apt install -y certbot
@@ -85,16 +84,12 @@ jobs:
         run: |
           echo "${{ secrets[env.SSH_KEY_SECRET_NAME] }}" > server_ssh_file
           chmod 400 server_ssh_file
-          ssh -i server_ssh_file -o StrictHostKeyChecking=no ${{ secrets[env.USER_SECRET_NAME] }}@${{ secrets[env.HOST_SECRET_NAME] }} 'mkdir -p /home/project/'
-          scp -i server_ssh_file -o StrictHostKeyChecking=no docker-compose.server.yml domain.template.conf ${{ secrets[env.USER_SECRET_NAME] }}@${{ secrets[env.HOST_SECRET_NAME] }}:/home/project/
-          ssh -i server_ssh_file -o StrictHostKeyChecking=no ${{ secrets[env.USER_SECRET_NAME] }}@${{ secrets[env.HOST_SECRET_NAME] }} << 'EOF'
+          ssh -i server_ssh_file -o StrictHostKeyChecking=no ${{ secrets[env.USER_SECRET_NAME] }}@${{ vars[env.DOMAIN_KEY_NAME] }} 'mkdir -p /home/project/'
+          scp -i server_ssh_file -o StrictHostKeyChecking=no docker-compose.server.yml domain.template.conf ${{ secrets[env.USER_SECRET_NAME] }}@${{ vars[env.DOMAIN_KEY_NAME] }}:/home/project/
+          ssh -i server_ssh_file -o StrictHostKeyChecking=no ${{ secrets[env.USER_SECRET_NAME] }}@${{ vars[env.DOMAIN_KEY_NAME] }} << 'EOF'
             cd /home/project/
             FILE="${{ inputs.DOCKER_IMAGE_TAG }}.env"
             [ -f "$FILE" ] || echo "${{ secrets.ENV_FILE }}" > "$FILE"
-            echo $FILE
-            echo "================="
-            ls $FILE
-            echo "================="
             export ENV_FILE=$FILE
             export DOMAIN_NAME=${{ vars[env.DOMAIN_KEY_NAME] }}
             export DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
@@ -106,5 +101,6 @@ jobs:
             docker compose -f docker-compose.server.yml --env-file $FILE run api rails db:migrate
             docker compose -f docker-compose.server.yml --env-file $FILE up -d
             docker compose -f docker-compose.server.yml --env-file $FILE up -d --force-recreate api sidekiq
-            docker image prune -f
+            docker container prune -f
+            docker image prune -fa
           EOF
