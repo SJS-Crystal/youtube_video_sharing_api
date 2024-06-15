@@ -92,6 +92,7 @@ jobs:
             [ -f "$FILE" ] || echo "${{ secrets.ENV_FILE }}" > "$FILE"
             export ENV_FILE=$FILE
             export DOMAIN_NAME=${{ vars[env.DOMAIN_KEY_NAME] }}
+            echo "ALLOWED_HOST=$DOMAIN_NAME" >> "$FILE"
             export DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
             export DOCKER_IMAGE_TAG=${{ inputs.DOCKER_IMAGE_TAG }}
             export DOCKER_IMAGE_NAME=${{ secrets.DOCKER_IMAGE_NAME }}
