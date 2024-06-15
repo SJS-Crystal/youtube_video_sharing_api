@@ -102,4 +102,6 @@ jobs:
             docker compose -f docker-compose.server.yml --env-file $FILE run api rails db:migrate
             docker compose -f docker-compose.server.yml --env-file $FILE up -d
             docker compose -f docker-compose.server.yml --env-file $FILE up -d --force-recreate api sidekiq
+            docker container prune -f
+            docker image prune -fa
           EOF
