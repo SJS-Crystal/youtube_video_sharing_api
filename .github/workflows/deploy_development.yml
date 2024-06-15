@@ -67,7 +67,7 @@ jobs:
 
 
     - name: Create env file
-      run: echo "${{ vars.ENV_FILE }}" > .env
+      run: echo "${{ secrets.ENV_FILE }}" > .env
 
     - name: Log in to Docker Hub
       run: echo "${{ secrets.DOCKER_TOKEN }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
