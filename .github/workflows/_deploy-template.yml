@@ -95,6 +95,7 @@ jobs:
             echo "================="
             ls $FILE
             echo "================="
+            export ENV_FILE=$FILE
             export DOMAIN_NAME=${{ vars[env.DOMAIN_KEY_NAME] }}
             export DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
             export DOCKER_IMAGE_TAG=${{ inputs.DOCKER_IMAGE_TAG }}
