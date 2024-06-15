@@ -99,9 +99,9 @@ jobs:
             envsubst '$DOMAIN_NAME' < domain.template.conf > "${DOMAIN_NAME}.conf"
             echo "${{ secrets.DOCKER_TOKEN }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
             docker pull $DOCKER_USERNAME/$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG
-            docker compose -f docker-compose.server.yml --env-file $FILE run api rails db:migrate
-            docker compose -f docker-compose.server.yml --env-file $FILE up -d
-            docker compose -f docker-compose.server.yml --env-file $FILE up -d --force-recreate api sidekiq
-            docker container prune -f
+            docker compose -f docker-compose.server.yml --env-file $FILE run api rails db:migrate && \
+            docker compose -f docker-compose.server.yml --env-file $FILE up -d && \
+            docker compose -f docker-compose.server.yml --env-file $FILE up -d --force-recreate api sidekiq && \
+            docker container prune -f && \
             docker image prune -fa
           EOF
