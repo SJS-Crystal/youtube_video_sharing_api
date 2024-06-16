@@ -48,7 +48,7 @@ jobs:
       IMAGE_TAG: ${{ steps.build_image.outputs.IMAGE_TAG }}
       SERVER_NUMBER: ${{ steps.target_server.outputs.SERVER_NUMBER }}
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         ref: refs/pull/${{ github.event.issue.number }}/merge
 
