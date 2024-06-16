@@ -24,7 +24,6 @@ services:
     volumes:
       - ./storage:/app/storage
       - ./log:/app/log
-      # - nginx_conf_volume:/app/default.conf
       - public_html_volume:/app/public
     expose:
       - 3000
@@ -46,17 +45,9 @@ services:
   nginx:
     image: nginx:latest
     volumes:
-      # - nginx_conf_volume:/etc/nginx/conf.d/${DOMAIN_NAME}.conf # double-check
       - public_html_volume:/usr/share/nginx/html
       - ./${DOMAIN_NAME}.conf:/etc/nginx/conf.d/${DOMAIN_NAME}.conf
-      # # ci: copy from domain.conf.template, build -> image, run image -> api
-      # # this volumn should be shared with api
-
-      # - ./public:/usr/share/nginx/html 
-      # # this volumn should be shared with api
-
       - /etc/letsencrypt:/etc/letsencrypt
-      # server should prepare ssl
     ports:
       - 443:443
       - 80:80
