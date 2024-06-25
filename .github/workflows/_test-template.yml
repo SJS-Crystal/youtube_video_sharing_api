@@ -115,17 +115,17 @@ jobs:
 
       - name: Install dependencies
         run: |
-          docker-compose exec api bundle config set --local path 'vendor/bundle'
-          docker-compose exec api bundle install -j $(nproc) --retry 3
+          docker-compose -f docker-compose.test.yml api bundle config set --local path 'vendor/bundle'
+          docker-compose -f docker-compose.test.yml api bundle install -j $(nproc) --retry 3
 
       - name: Lint Ruby files
-        run: docker-compose exec api bundle exec rubocop --parallel
+        run: docker-compose -f docker-compose.test.yml api bundle exec rubocop --parallel
 
       - name: Check for security vulnerabilities (brakeman)
-        run: docker-compose exec api bundle exec brakeman
+        run: docker-compose -f docker-compose.test.yml api bundle exec brakeman
 
       - name: Check for security vulnerabilities (bundle-audit)
-        run: docker-compose exec api bundle exec bundle-audit check --update
+        run: docker-compose -f docker-compose.test.yml api bundle exec bundle-audit check --update
 
       - name: Run tests
-        run: docker-compose exec api bundle exec rspec
+        run: docker-compose -f docker-compose.test.yml api bundle exec rspec
