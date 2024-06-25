@@ -69,12 +69,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Docker Compose
-        run: docker-compose -f docker-compose.test.yml up -d
-
-      - name: Install dependencies
-        run: docker-compose -f docker-compose.test.yml exec -T api bundle install -j $(nproc) --retry 3
-
       - name: Lint Ruby files
         run: docker-compose -f docker-compose.test.yml exec -T api bundle exec rubocop --parallel
 
@@ -84,5 +78,5 @@ jobs:
       - name: Check for security vulnerabilities (bundle-audit)
         run: docker-compose -f docker-compose.test.yml exec -T api bundle exec bundle-audit check --update
 
-      - name: Run tests
+      - name: Run unit tests
         run: docker-compose -f docker-compose.test.yml exec -T api bundle exec rspec
