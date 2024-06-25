@@ -11,9 +11,10 @@ This is application for sharing youtube video
 # How to get the application up and run
 - Clone repo git clone https://github.com/SJS-Crystal/youtube_video_sharing_api.git
 - Create .env file in root directory from .env.sample
-- run `docker-compose up`
+- Run `docker-compose run api rails db:create`
+- Run `docker-compose up`
 
-# How to run the test, lint, chẹck security
+# How to run the test, lint, check security
 - Rspec:
   ```sh
   docker-compose run api bundle exec rspec
