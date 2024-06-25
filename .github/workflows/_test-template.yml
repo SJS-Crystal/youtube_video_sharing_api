@@ -66,24 +66,24 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    services:
-      postgres:
-        image: postgres:16
-        ports:
-          - 5432:5432
-        env:
-          POSTGRES_DB: test_database
-          POSTGRES_USER: usertest
-          POSTGRES_PASSWORD: password123123
-        options: >-
-          --health-cmd "pg_isready -U usertest -d test_database -h localhost"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-      redis:
-        image: redis:7.2.4
-        ports: 
-          - 6379:6379
+    # services:
+      # postgres:
+      #   image: postgres:16
+      #   ports:
+      #     - 5432:5432
+      #   env:
+      #     POSTGRES_DB: test_database
+      #     POSTGRES_USER: usertest
+      #     POSTGRES_PASSWORD: password123123
+      #   options: >-
+      #     --health-cmd "pg_isready -U usertest -d test_database -h localhost"
+      #     --health-interval 10s
+      #     --health-timeout 5s
+      #     --health-retries 5
+      # redis:
+      #   image: redis:7.2.4
+      #   ports: 
+      #     - 6379:6379
 
     env:
       RAILS_ENV: test
