@@ -3,10 +3,6 @@ version: '3'
 services:
   db:
     image: postgres:16
-    ports:
-      - '5432:5432'
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
     environment:
       POSTGRES_USER: 'usertest'
       POSTGRES_PASSWORD: 'password123123'
@@ -14,10 +10,6 @@ services:
 
   redis:
     image: redis:7.2.4
-    ports:
-      - '6379:6379'
-    volumes:
-      - redis_data:/var/lib/redis/data
 
   api:
     build:
@@ -27,12 +19,8 @@ services:
     environment:
       RAILS_ENV: test
       DATABASE_URL: 'postgresql://usertest:password123123@db:5432/test_database'
-    volumes:
-      - .:/app
     depends_on:
       - db
       - redis
-
-volumes:
-  postgres_data:
-  redis_data:
+    env_file:
+      - .env_sample
