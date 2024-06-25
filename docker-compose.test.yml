@@ -19,6 +19,7 @@ services:
     environment:
       RAILS_ENV: test
       DATABASE_URL: 'postgresql://usertest:password123123@db:5432/test_database'
+      RUBYOPT: '-W0'
     depends_on:
       - db
       - redis
