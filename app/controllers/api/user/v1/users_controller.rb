@@ -26,6 +26,6 @@ class Api::User::V1::UsersController < Api::User::V1::BaseController
     user.save!
     token, public_key = Authentication.generate_token(user)
     user.update!(public_key: public_key)
-    render json: {data: {id: user.id, email: user.email, token: token}}, status: :ok
+    render json: {data: {id: user.id, email: user.email, token: token}}, status: :created
   end
 end
