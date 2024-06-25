@@ -115,7 +115,6 @@ jobs:
 
       - name: Install dependencies
         run: |
-          docker-compose -f docker-compose.test.yml exec api bundle config set --local path 'vendor/bundle'
           docker-compose -f docker-compose.test.yml exec api bundle install -j $(nproc) --retry 3
 
       - name: Lint Ruby files
