@@ -10,7 +10,9 @@ RUN echo "$RAILS_ENV"
 RUN echo "====================="
 
 RUN if [ "$RAILS_ENV" != "development" ]; then bundle config set without 'development test deployment'; fi
-RUN bundle install -j $(nproc) --retry 3
+RUN if [ "$RAILS_ENV" != "development" ]; then bundle install --without development test deployment -j $(nproc) --retry 3; fi
+RUN if [ "$RAILS_ENV" = "development" ]; then bundle install -j $(nproc) --retry 3; fi
+# RUN bundle install -j $(nproc) --retry 3
 RUN bundle lock --add-platform arm64-darwin-22
 RUN bundle lock --add-platform aarch64-linux
 RUN bundle lock --add-platform x86_64-linux
