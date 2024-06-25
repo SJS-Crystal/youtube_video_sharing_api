@@ -7,29 +7,49 @@ jobs:
   run:
     runs-on: ubuntu-latest
 
-    steps:
-      - uses: actions/checkout@v4
+    env:
+      BUNDLE_PATH: /vendor/bundle
 
-      - name: Cache Gems
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Cache Docker layers
         uses: actions/cache@v2
         with:
-          path: vendor/bundle
-          key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-gems-
+            ${{ runner.os }}-buildx-
 
-      - name: Bundle install
-        run: docker-compose -f docker-compose.test.yml run -T -v $(pwd)/vendor/bundle:/app/vendor/bundle api bundle install -j $(nproc) --retry 3
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: Dockerfile
+          builder: default
+          push: false
+          tags: myapp:latest
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
+
+      - name: Run Docker Compose
+        run: docker-compose -f docker-compose.test.yml up -d
+
+      # - name: Wait for services to be up
+      #   run: sleep 30
 
       - name: Lint Ruby files
-        run: docker-compose -f docker-compose.test.yml run -T -v $(pwd)/vendor/bundle:/app/vendor/bundle api bundle exec rubocop --parallel
+        run: docker-compose -f docker-compose.test.yml exec -T api bundle exec rubocop --parallel
 
       - name: Check for security vulnerabilities (brakeman)
-        run: docker-compose -f docker-compose.test.yml run -T -v $(pwd)/vendor/bundle:/app/vendor/bundle api bundle exec brakeman
+        run: docker-compose -f docker-compose.test.yml exec -T api bundle exec brakeman
 
       - name: Check for security vulnerabilities (bundle-audit)
-        run: docker-compose -f docker-compose.test.yml run -T -v $(pwd)/vendor/bundle:/app/vendor/bundle api bundle exec bundle-audit check --update
+        run: docker-compose -f docker-compose.test.yml exec -T api bundle exec bundle-audit check --update
 
       - name: Run tests
-        run: docker-compose -f docker-compose.test.yml run -T -v $(pwd)/vendor/bundle:/app/vendor/bundle api bundle exec rspec
-
+        run: docker-compose -f docker-compose.test.yml exec -T api bundle exec rspec
