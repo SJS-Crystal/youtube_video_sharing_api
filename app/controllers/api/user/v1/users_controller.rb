@@ -1,7 +1,7 @@
 class Api::User::V1::UsersController < Api::User::V1::BaseController
   skip_before_action :authenticate, only: %i[login create]
 
-  $user_desc << 'api/user/v1/users/logout | POST | Authorization(header) | Logout 123123'
+  $user_desc << 'api/user/v1/users/logout | POST | Authorization(header) | Logout'
   def logout
     @current_user.update!(public_key: nil)
     render json: {message: 'Logged out successfully'}
