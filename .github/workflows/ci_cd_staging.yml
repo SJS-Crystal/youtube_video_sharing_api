@@ -31,7 +31,7 @@ jobs:
     outputs:
       IMAGE_TAG: ${{ steps.build_image.outputs.IMAGE_TAG }}
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v4 
 
     - name: Create env file
       run: |
