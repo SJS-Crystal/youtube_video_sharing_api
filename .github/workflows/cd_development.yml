@@ -1,4 +1,4 @@
-name: Deploy Development
+name: CD Development
 
 on:
   issue_comment:
