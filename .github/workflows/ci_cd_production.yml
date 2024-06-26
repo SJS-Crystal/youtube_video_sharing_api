@@ -1,0 +1,54 @@
+name: CI/CD Production
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+
+jobs:
+  run_test_Production:
+    if: startsWith(github.ref, 'refs/tags/')
+    uses: ./.github/workflows/_test-template.yml
+
+
+  docker_build_Production:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [run_test_Production]
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+    outputs:
+      IMAGE_TAG: ${{ steps.build_image.outputs.IMAGE_TAG }}
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Create env file
+      run: |
+        echo "${{ secrets.ENV_FILE }}" > .env
+
+    - name: Log in to Docker Hub
+      run: echo "${{ secrets.DOCKER_TOKEN }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+    - name: Build and push Docker image
+      id: build_image
+      run: |
+        IMAGE_TAG=${GITHUB_REF#refs/tags/v}
+        echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_OUTPUT
+        echo "Building image with tag ${IMAGE_TAG}"
+        set -o allexport; source .env; set +o allexport
+        docker build . -f Dockerfile.server --build-arg RAILS_ENV=$RAILS_ENV -t ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:${IMAGE_TAG}
+        echo "Pushing image ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:${IMAGE_TAG}"
+        docker push ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:${IMAGE_TAG}
+
+
+  deploy_Production:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [docker_build_Production]
+    uses: ./.github/workflows/_deploy-template.yml
+    secrets: inherit
+    with:
+      DOCKER_IMAGE_TAG: ${{ needs.docker_build_Production.outputs.IMAGE_TAG }}
+      serverSelection: '1'
+      environmentName: production
+      approvalEnvironmentName: approval_production_deloyment

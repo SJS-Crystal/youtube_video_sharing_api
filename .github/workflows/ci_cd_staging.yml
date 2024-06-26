@@ -1,0 +1,77 @@
+name: CI/CD Staging
+
+on:
+  pull_request:
+    branches:
+    - main
+    types: [opened, synchronize, reopened]
+
+jobs:
+  run_test_Staging:
+    if: >
+      github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'main' && (
+        startsWith(github.event.pull_request.head.ref, 'release') ||
+        startsWith(github.event.pull_request.head.ref, 'hotfix')
+      )
+
+    uses: ./.github/workflows/_test-template.yml
+
+
+  docker_build_Staging:
+    if: >
+      github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'main' && (
+        startsWith(github.event.pull_request.head.ref, 'release') ||
+        startsWith(github.event.pull_request.head.ref, 'hotfix')
+      )
+
+    needs: [run_test_Staging]
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+    outputs:
+      IMAGE_TAG: ${{ steps.build_image.outputs.IMAGE_TAG }}
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Create env file
+      run: |
+        echo "${{ secrets.ENV_FILE }}" > .env
+
+    - name: Log in to Docker Hub
+      run: echo "${{ secrets.DOCKER_TOKEN }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+    - name: Build and push Docker image
+      id: build_image
+      run: |
+        IMAGE_TAG=$(openssl rand -hex 4)
+        echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_OUTPUT
+        echo "Building image with tag ${IMAGE_TAG}"
+        set -o allexport; source .env; set +o allexport
+        docker build . -f Dockerfile.server --build-arg RAILS_ENV=$RAILS_ENV -t ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:${IMAGE_TAG}
+        echo "Pushing image ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:${IMAGE_TAG}"
+        docker push ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:${IMAGE_TAG}
+
+
+  deploy_Staging:
+    if: >
+      github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'main' && (
+        startsWith(github.event.pull_request.head.ref, 'release') ||
+        startsWith(github.event.pull_request.head.ref, 'hotfix')
+      )
+    needs: [docker_build_Staging]
+    uses: ./.github/workflows/_deploy-template.yml
+    secrets: inherit
+    with:
+      DOCKER_IMAGE_TAG: ${{ needs.docker_build_Staging.outputs.IMAGE_TAG }}
+      serverSelection: '1'
+      environmentName: staging
+      approvalEnvironmentName: approval_staging_deloyment
+
+
+  need_merge_main_approval:
+    runs-on: ubuntu-latest
+    environment:
+      name: approval_merge_main_branch
+    steps:
+      - name: Wait for merge approval 
+        run: echo "Waiting for admin merge approval..."

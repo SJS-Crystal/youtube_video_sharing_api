@@ -1,0 +1,27 @@
+version: '3'
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: 'usertest'
+      POSTGRES_PASSWORD: 'password123123'
+      POSTGRES_DB: 'test_database'
+
+  redis:
+    image: redis:7.2.4
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: sleep infinity
+    environment:
+      RAILS_ENV: test
+      DATABASE_URL: 'postgresql://usertest:password123123@db:5432/test_database'
+      RUBYOPT: '-W0'
+    depends_on:
+      - db
+      - redis
+    env_file:
+      - .env_sample
