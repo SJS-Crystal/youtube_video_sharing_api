@@ -1,0 +1,36 @@
+# This workflow allow deploy with many options.
+# can specify which image version, and which environment to deploy
+
+name: Deploy with options
+
+on:
+  workflow_dispatch:
+    inputs:
+        environmentName:
+            description: "Select the environment (ENVs and secrets from this environment will be apply during deployment)"
+            required: true
+            type: choice
+            options:
+                - development
+                - test
+                - staging
+                - production
+
+        DOCKER_IMAGE_TAG:
+            description: "Docker image tag"
+            required: true
+
+        serverSelection:
+            description: "Enter server number (e.g., 1 for SERVER 1, 2 for SERVER 2)"
+            required: true
+
+
+jobs:
+    Deployment:
+        uses: ./.github/workflows/_deploy-template.yml
+        secrets: inherit
+        with:
+            DOCKER_IMAGE_TAG: ${{ github.event.inputs.DOCKER_IMAGE_TAG }}
+            serverSelection: ${{ github.event.inputs.serverSelection }}
+            environmentName: ${{ github.event.inputs.environmentName }}
+            approvalEnvironmentName: approval_${{ github.event.inputs.environmentName }}_deloyment
