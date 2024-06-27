@@ -79,7 +79,7 @@ RSpec.describe Api::User::V1::UsersController, type: :controller do
 
       it 'returns an error' do
         post :create, params: params
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(422)
         expect(JSON.parse(response.body)['message']).to include('Password is too short (minimum is 6 characters)')
       end
     end
@@ -89,7 +89,7 @@ RSpec.describe Api::User::V1::UsersController, type: :controller do
 
       it 'returns an error' do
         post :create, params: params
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(422)
         expect(JSON.parse(response.body)['message']).to include('Email has already been taken')
       end
     end
@@ -99,7 +99,7 @@ RSpec.describe Api::User::V1::UsersController, type: :controller do
 
       it 'returns an error' do
         post :create, params: params
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(422)
         expect(JSON.parse(response.body)['message']).to include("Password can't be blank")
       end
     end
@@ -109,7 +109,7 @@ RSpec.describe Api::User::V1::UsersController, type: :controller do
 
       it 'returns an error' do
         post :create, params: params
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(422)
         expect(JSON.parse(response.body)['message']).to include("Email can't be blank")
       end
     end

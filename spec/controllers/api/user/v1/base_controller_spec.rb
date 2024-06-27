@@ -81,7 +81,7 @@ RSpec.describe Api::User::V1::BaseController, type: :controller do
 
     it 'handles ActiveRecord::RecordInvalid' do
       get :action_that_raises_record_invalid
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(422)
       expect(JSON.parse(response.body)['message']).to eq("Password can't be blank. Email can't be blank. Email is invalid. Password is too short (minimum is 6 characters)")
     end
 
@@ -117,7 +117,7 @@ RSpec.describe Api::User::V1::BaseController, type: :controller do
 
     it 'handles Pagy VariableError' do
       get :action_that_raises_variable_error
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(422)
       expect(JSON.parse(response.body)['message']).to eq('expected :1 2; got 3')
     end
   end
