@@ -64,4 +64,5 @@ Rails.application.configure do
   # config.action_cable.disable_request_forgery_protection = true
 
   config.action_cable.allowed_request_origins = [/http:\/\/*/, /https:\/\/*/, /file:\/\/*/, 'file://', nil]
+  config.hosts << ENV['ALLOWED_HOST']
 end

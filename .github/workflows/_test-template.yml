@@ -1,0 +1,26 @@
+name: _ Test Template
+
+on:
+  workflow_call:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Bundle install
+        run: docker-compose -f docker-compose.test.yml run -T api bundle install -j $(nproc) --retry 3
+
+      - name: Lint Ruby files
+        run: docker-compose -f docker-compose.test.yml run -T api bundle exec rubocop --parallel
+
+      - name: Check for security vulnerabilities (brakeman)
+        run: docker-compose -f docker-compose.test.yml run -T api bundle exec brakeman
+
+      - name: Check for security vulnerabilities (bundle-audit)
+        run: docker-compose -f docker-compose.test.yml run -T api bundle exec bundle-audit check --update
+
+      - name: Run tests
+        run: docker-compose -f docker-compose.test.yml run -T api bundle exec rspec

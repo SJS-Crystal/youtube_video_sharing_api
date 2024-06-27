@@ -85,4 +85,5 @@ Rails.application.configure do
   config.active_record.dump_schema_after_migration = false
 
   config.action_cable.allowed_request_origins = [/http:\/\/*/, /https:\/\/*/, /file:\/\/*/, 'file://', nil]
+  config.hosts << ENV['ALLOWED_HOST']
 end

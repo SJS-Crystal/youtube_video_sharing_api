@@ -1,0 +1,22 @@
+name: CI Development
+
+on:
+  pull_request:
+    branches:
+    - develop
+
+    types: [opened, synchronize, reopened]
+
+
+jobs:
+  run_test_Development:
+    if: (github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'develop')
+    uses: ./.github/workflows/_test-template.yml
+
+  need_merge_develop_approval:
+    runs-on: ubuntu-latest
+    environment:
+      name: approval_merge_develop_branch
+    steps:
+      - name: Wait for merge approval 
+        run: echo "Waiting for admin merge approval..."

@@ -1,0 +1,108 @@
+name: _ Deployment Template
+
+on:
+  workflow_call:
+    inputs:
+      DOCKER_IMAGE_TAG:
+        description: 'Docker image tag'
+        required: true
+        type: string
+
+      serverSelection:
+        description: 'Enter server number (e.g., 1 for SERVER1, 2 for SERVER2)'
+        required: true
+        type: string
+
+      environmentName:
+        description: 'Enter the environment name'
+        required: true
+        type: string
+
+      approvalEnvironmentName:
+        description: 'Enter the approval environment name'
+        required: true
+        type: string
+
+env:
+  USER_SECRET_NAME: ${{ format('SERVER_USER_{0}', inputs.serverSelection) }}
+  SSH_KEY_SECRET_NAME: ${{ format('SERVER_SSH_KEY_{0}', inputs.serverSelection) }}
+  DOMAIN_KEY_NAME: ${{ format('DOMAIN_NAME_{0}', inputs.serverSelection) }}
+
+jobs:
+  Approval:
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.approvalEnvironmentName }}
+
+    steps:
+      - name: Wait for deploy approval
+        run: echo "Waiting for admin deploy approval..."
+
+  Install_dependencies:
+    needs: [Approval]
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.environmentName }}
+    steps:
+      - name: Check if already setup
+        id: setup-check
+        shell: bash
+        run: |
+          if [ -z "${{ secrets[env.SSH_KEY_SECRET_NAME] }}" ]; then
+              echo "::ERROR: '${{ env.SSH_KEY_SECRET_NAME }}' SERCRET IS EMPTY! PLEASE SET THIS SERCRET"
+              exit 1
+          fi
+          echo "${{ secrets[env.SSH_KEY_SECRET_NAME] }}" > server_ssh_file
+          chmod 400 server_ssh_file
+          ssh -i server_ssh_file -o StrictHostKeyChecking=no ${{ secrets[env.USER_SECRET_NAME] }}@${{ vars[env.DOMAIN_KEY_NAME] }} '[ -f /etc/setup_done ] && exit 99 || exit 0'
+        continue-on-error: true
+
+      - name: Install dependencies
+        if: steps.setup-check.outcome == 'success'
+        shell: bash
+        env:
+          EMAIL: ${{ vars.SIGN_SSL_EMAIL || 'default@gmail.com' }}
+        run: |
+          ssh -i server_ssh_file -o StrictHostKeyChecking=no ${{ secrets[env.USER_SECRET_NAME] }}@${{ vars[env.DOMAIN_KEY_NAME] }} << 'EOF'
+            sudo apt update
+            sudo apt install -y docker-compose-v2
+            sudo apt install -y certbot
+            sudo certbot certonly --standalone --agree-tos --email ${{env.EMAIL}} -d ${{ vars[env.DOMAIN_KEY_NAME] }} --no-eff-email -n
+            (crontab -l 2>/dev/null; echo "0 2 * * 1 /usr/bin/certbot renew --quiet") | crontab -
+            touch /etc/setup_done
+          EOF
+
+  Deploy:
+    needs: [Install_dependencies]
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.environmentName }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy to Server
+        shell: bash
+        run: |
+          echo "${{ secrets[env.SSH_KEY_SECRET_NAME] }}" > server_ssh_file
+          chmod 400 server_ssh_file
+          ssh -i server_ssh_file -o StrictHostKeyChecking=no ${{ secrets[env.USER_SECRET_NAME] }}@${{ vars[env.DOMAIN_KEY_NAME] }} 'mkdir -p /home/project/'
+          scp -i server_ssh_file -o StrictHostKeyChecking=no docker-compose.server.yml domain.template.conf ${{ secrets[env.USER_SECRET_NAME] }}@${{ vars[env.DOMAIN_KEY_NAME] }}:/home/project/
+          ssh -i server_ssh_file -o StrictHostKeyChecking=no ${{ secrets[env.USER_SECRET_NAME] }}@${{ vars[env.DOMAIN_KEY_NAME] }} << 'EOF'
+            cd /home/project/
+            FILE="${{ inputs.DOCKER_IMAGE_TAG }}.env"
+            [ -f "$FILE" ] || echo "${{ secrets.ENV_FILE }}" > "$FILE"
+            export ENV_FILE=$FILE
+            export DOMAIN_NAME=${{ vars[env.DOMAIN_KEY_NAME] }}
+            echo "ALLOWED_HOST=$DOMAIN_NAME" >> "$FILE"
+            export DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
+            export DOCKER_IMAGE_TAG=${{ inputs.DOCKER_IMAGE_TAG }}
+            export DOCKER_IMAGE_NAME=${{ secrets.DOCKER_IMAGE_NAME }}
+            envsubst '$DOMAIN_NAME' < domain.template.conf > "${DOMAIN_NAME}.conf"
+            echo "${{ secrets.DOCKER_TOKEN }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+            docker pull $DOCKER_USERNAME/$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG
+            docker compose -f docker-compose.server.yml --env-file $FILE up -d && \
+            docker compose -f docker-compose.server.yml --env-file $FILE run api rails db:migrate && \
+            docker compose -f docker-compose.server.yml --env-file $FILE up -d --force-recreate api sidekiq && \
+            sleep 30 && \
+            docker container prune -f && \
+            docker image prune -fa
+          EOF
